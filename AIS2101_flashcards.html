@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIS2101 Flashcards</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f0ede8;
+    --text: #1a1a18;
+    --text2: #6b6b66;
+    --text3: #a0a09a;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --green: #1D9E75;
+    --green-bg: #E1F5EE;
+    --green-dark: #0F6E56;
+    --red: #993C1D;
+    --red-bg: #FAECE7;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a18;
+      --surface: #242422;
+      --surface2: #2e2e2b;
+      --text: #f0efe8;
+      --text2: #a0a09a;
+      --text3: #686862;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.18);
+      --green-bg: #0a2e20;
+      --red-bg: #2e1208;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+  header p { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+  .container { width: 100%; max-width: 620px; }
+
+  /* Topic filters */
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .filter-section { font-size: 11px; color: var(--text3); width: 100%; padding-top: 4px; }
+  .topic-btn {
+    font-size: 11px; padding: 4px 11px; border-radius: 20px;
+    border: 0.5px solid var(--border2); background: var(--surface);
+    color: var(--text2); cursor: pointer; transition: all 0.15s;
+  }
+  .topic-btn.active {
+    background: var(--surface2); color: var(--text);
+    border-color: var(--border2); font-weight: 500;
+  }
+  .ctrl-strip {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 0.75rem; font-size: 13px; color: var(--text2);
+  }
+  .prog-bar { flex: 1; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+  .prog-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.3s; }
+  .shuffle-btn {
+    font-size: 11px; padding: 4px 11px; border-radius: 20px;
+    border: 0.5px solid var(--border); background: transparent;
+    color: var(--text2); cursor: pointer;
+  }
+  .shuffle-btn:hover { background: var(--surface2); }
+
+  /* Card */
+  .card-scene { perspective: 1000px; width: 100%; height: 230px; cursor: pointer; margin-bottom: 1rem; }
+  .card-inner {
+    position: relative; width: 100%; height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.42s cubic-bezier(.4,0,.2,1);
+  }
+  .card-inner.flipped { transform: rotateY(180deg); }
+  .card-face {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    border-radius: var(--radius); border: 0.5px solid var(--border);
+    background: var(--surface);
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 1.5rem 2rem; text-align: center;
+  }
+  .card-back { transform: rotateY(180deg); background: var(--surface2); }
+  .card-topic {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--text3); margin-bottom: 0.6rem;
+  }
+  .card-q { font-size: 18px; font-weight: 500; line-height: 1.4; color: var(--text); }
+  .card-a { font-size: 16px; line-height: 1.6; color: var(--text); }
+  .card-hint { font-size: 11px; color: var(--text3); position: absolute; bottom: 1rem; }
+
+  /* Controls */
+  .nav-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 0.6rem; }
+  .nav-btn {
+    padding: 8px 22px; border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border2); background: var(--surface);
+    color: var(--text); font-size: 14px; cursor: pointer;
+  }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .nav-btn:not(:disabled):hover { background: var(--surface2); }
+  .score-row { display: flex; gap: 8px; }
+  .score-btn {
+    padding: 7px 18px; border-radius: var(--radius-sm); border: 0.5px solid;
+    font-size: 13px; cursor: pointer; background: transparent;
+  }
+  .score-btn.got { border-color: var(--green-dark); color: var(--green-dark); }
+  .score-btn.got:hover { background: var(--green-bg); }
+  .score-btn.nope { border-color: var(--red); color: var(--red); }
+  .score-btn.nope:hover { background: var(--red-bg); }
+
+  /* Stats */
+  .stats { display: flex; gap: 8px; margin-top: 0.25rem; }
+  .stat {
+    flex: 1; text-align: center; padding: 8px 4px;
+    background: var(--surface2); border-radius: var(--radius-sm);
+    font-size: 12px; color: var(--text2);
+  }
+  .stat span { display: block; font-size: 19px; font-weight: 500; color: var(--text); margin-bottom: 1px; }
+  .stat.green span { color: var(--green-dark); }
+  .stat.red span { color: var(--red); }
+
+  footer { margin-top: 2.5rem; font-size: 12px; color: var(--text3); text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>AIS2101 — Intelligent Systems</h1>
+  <p>Flashcards from AIMA (Russell &amp; Norvig, 4th ed.) &nbsp;·&nbsp; NTNU Ålesund</p>
+</header>
+
+<div class="container">
+  <div class="filters" id="topicBar"></div>
+
+  <div class="ctrl-strip">
+    <span id="cardNum">1 / 1</span>
+    <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+    <button class="shuffle-btn" onclick="shuffle()">⇄ shuffle</button>
+  </div>
+
+  <div class="card-scene" onclick="flip()">
+    <div class="card-inner" id="cardInner">
+      <div class="card-face card-front">
+        <div class="card-topic" id="cardTag"></div>
+        <div class="card-q" id="cardQ"></div>
+        <div class="card-hint">click to reveal</div>
+      </div>
+      <div class="card-face card-back">
+        <div class="card-topic" id="cardTagB"></div>
+        <div class="card-a" id="cardA"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-row">
+    <button class="nav-btn" id="prevBtn" onclick="go(-1)">← prev</button>
+    <div class="score-row" id="scoreRow" style="display:none">
+      <button class="score-btn got" onclick="mark(true)">✓ got it</button>
+      <button class="score-btn nope" onclick="mark(false)">✗ not yet</button>
+    </div>
+    <button class="nav-btn" id="nextBtn" onclick="go(1)">next →</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span id="sSeen">0</span>Seen</div>
+    <div class="stat green"><span id="sGot">0</span>Got it</div>
+    <div class="stat red"><span id="sRev">0</span>Review</div>
+    <div class="stat"><span id="sTotal">0</span>Total</div>
+  </div>
+</div>
+
+<footer>Open in any browser · No internet required · Share freely with study mates</footer>
+
+<script>
+const ALL = [
+  // INTRO & AGENTS
+  {t:"Intro & Agents", q:"What is AI?", a:"Building agents that perceive their environment and take actions to maximise performance."},
+  {t:"Intro & Agents", q:"What is a rational agent?", a:"An agent that takes the action expected to maximise its performance measure, given what it knows."},
+  {t:"Intro & Agents", q:"What does PEAS stand for?", a:"Performance measure, Environment, Actuators, Sensors."},
+  {t:"Intro & Agents", q:"What are the 4 agent types?", a:"Reflex → model-based → goal-based → utility-based. Each adds more sophistication."},
+  {t:"Intro & Agents", q:"Fully vs. partially observable?", a:"Fully: agent sees the complete state. Partially: some state is hidden (e.g. poker cards)."},
+  {t:"Intro & Agents", q:"Deterministic vs. stochastic?", a:"Deterministic: same action always gives same result. Stochastic: outcomes have uncertainty."},
+  {t:"Intro & Agents", q:"Episodic vs. sequential?", a:"Episodic: each action is independent. Sequential: current action affects future decisions."},
+  {t:"Intro & Agents", q:"What is a utility function?", a:"A function mapping states to numbers representing how desirable they are to the agent."},
+
+  // SEARCH
+  {t:"Search", q:"What are the 5 parts of a search problem?", a:"Initial state, actions, transition model, goal test, path cost."},
+  {t:"Search", q:"What is BFS?", a:"Breadth-First Search — expands shallowest nodes first. Complete. Optimal if costs are equal."},
+  {t:"Search", q:"What is DFS?", a:"Depth-First Search — expands deepest node first. Not complete (can loop). Not optimal."},
+  {t:"Search", q:"What is UCS?", a:"Uniform-Cost Search — expands lowest-cost node first. Complete and optimal."},
+  {t:"Search", q:"What makes a search informed?", a:"It uses a heuristic h(n) — an estimate of the cost from n to the goal."},
+  {t:"Search", q:"What is A*?", a:"Expands nodes by f(n) = g(n) + h(n). Optimal if h is admissible (never overestimates)."},
+  {t:"Search", q:"What is an admissible heuristic?", a:"One that never overestimates the true cost to reach the goal."},
+  {t:"Search", q:"What is hill climbing?", a:"Local search that always moves to the best neighbouring state. Fast but gets stuck at local optima."},
+  {t:"Search", q:"What is simulated annealing?", a:"Like hill climbing, but occasionally accepts worse moves to escape local optima. Probability decreases over time."},
+
+  // MACHINE LEARNING
+  {t:"Machine Learning", q:"What is supervised learning?", a:"Learning a function from labelled input-output examples."},
+  {t:"Machine Learning", q:"What is unsupervised learning?", a:"Finding patterns or structure in data with no labels."},
+  {t:"Machine Learning", q:"Classification vs. regression?", a:"Classification: predict a category. Regression: predict a number."},
+  {t:"Machine Learning", q:"What is overfitting?", a:"Model learns the training data too well — including noise — and performs poorly on new data."},
+  {t:"Machine Learning", q:"What is underfitting?", a:"Model is too simple to capture the pattern — high error on both training and test data."},
+  {t:"Machine Learning", q:"What is the bias-variance tradeoff?", a:"High bias = underfitting. High variance = overfitting. You need to balance both."},
+  {t:"Machine Learning", q:"What is cross-validation?", a:"Splitting data into folds and rotating the test fold to get a reliable performance estimate."},
+  {t:"Machine Learning", q:"What is gradient descent?", a:"Iteratively move parameters in the direction that reduces the loss function."},
+  {t:"Machine Learning", q:"What is a decision tree?", a:"A model that splits data by asking yes/no questions on features. Interpretable but prone to overfitting."},
+  {t:"Machine Learning", q:"What is a support vector machine?", a:"Finds the hyperplane with maximum margin between classes."},
+  {t:"Machine Learning", q:"What is a loss function?", a:"Measures how wrong the model's predictions are. Training minimises this."},
+  {t:"Machine Learning", q:"What is regularisation?", a:"Penalising large weights to prevent overfitting (L1 / L2 penalties)."},
+  {t:"Machine Learning", q:"What is k-nearest neighbours?", a:"Classify by the majority label among the k closest training points."},
+  {t:"Machine Learning", q:"What is ensemble learning?", a:"Combining multiple models (e.g. bagging, boosting) to get better performance than any single model."},
+
+  // NEURAL NETWORKS
+  {t:"Neural Networks", q:"What is a neuron in an ANN?", a:"Computes: output = activation(weights · inputs + bias)."},
+  {t:"Neural Networks", q:"Why do we need activation functions?", a:"They add non-linearity — without them, the whole network collapses to one linear function."},
+  {t:"Neural Networks", q:"Name 3 activation functions.", a:"ReLU, sigmoid, tanh."},
+  {t:"Neural Networks", q:"What is backpropagation?", a:"Computes gradients of the loss w.r.t. each weight using the chain rule, then updates with gradient descent."},
+  {t:"Neural Networks", q:"What is a CNN?", a:"Uses convolutional filters that scan over input. Best for images and grid-structured data."},
+  {t:"Neural Networks", q:"What is an RNN?", a:"Has recurrent connections — 'memory' of past inputs. Used for sequences like text and speech."},
+  {t:"Neural Networks", q:"What is dropout?", a:"Randomly zeroes out neurons during training to prevent overfitting."},
+  {t:"Neural Networks", q:"What is deep learning?", a:"Neural networks with many hidden layers that learn hierarchical representations from data."},
+  {t:"Neural Networks", q:"What is a feedforward network?", a:"Information flows one way: input → hidden layers → output. No loops."},
+  {t:"Neural Networks", q:"What is transfer learning?", a:"Taking a model trained on one task and fine-tuning it for a different task."},
+
+  // FUZZY LOGIC
+  {t:"Fuzzy Logic", q:"What is fuzzy logic?", a:"Allows truth values between 0 and 1 — not just true/false. Models vague concepts like 'warm'."},
+  {t:"Fuzzy Logic", q:"What is a fuzzy set?", a:"A set where membership is a degree between 0 and 1, not just in or out."},
+  {t:"Fuzzy Logic", q:"What is a membership function?", a:"Maps a crisp input value to a degree of membership [0, 1] in a fuzzy set."},
+  {t:"Fuzzy Logic", q:"What is fuzzification?", a:"Converting crisp input values into fuzzy membership degrees."},
+  {t:"Fuzzy Logic", q:"What is a fuzzy rule?", a:"IF [fuzzy condition] THEN [fuzzy output]. e.g. IF temperature IS high THEN fan IS fast."},
+  {t:"Fuzzy Logic", q:"What is defuzzification?", a:"Converting a fuzzy output distribution back into a single crisp number."},
+  {t:"Fuzzy Logic", q:"What is the centroid method?", a:"Defuzzification by finding the centre of mass of the output fuzzy set."},
+  {t:"Fuzzy Logic", q:"What is a Mamdani FIS?", a:"A fuzzy inference system where rules have fuzzy consequents, aggregated then defuzzified."},
+  {t:"Fuzzy Logic", q:"Fuzzy logic vs. probability?", a:"Fuzzy handles vagueness in concepts. Probability handles uncertainty about facts. Different problems."},
+  {t:"Fuzzy Logic", q:"Name a real-world fuzzy logic application.", a:"Automatic washing machines, camera autofocus, anti-lock braking systems, elevator control."},
+
+  // REINFORCEMENT LEARNING
+  {t:"Reinforcement Learning", q:"What is reinforcement learning?", a:"An agent learns by interacting with an environment and receiving reward signals."},
+  {t:"Reinforcement Learning", q:"What are the key RL components?", a:"Agent, environment, state, action, reward, policy, value function."},
+  {t:"Reinforcement Learning", q:"What is a policy?", a:"A mapping from states to actions — what the agent does in each situation."},
+  {t:"Reinforcement Learning", q:"What is a value function?", a:"Estimates the expected cumulative reward from a given state (or state-action pair)."},
+  {t:"Reinforcement Learning", q:"What is the Q-function?", a:"Q(s, a) = expected total future reward of taking action a in state s, then acting optimally."},
+  {t:"Reinforcement Learning", q:"What is Q-learning?", a:"Model-free algorithm: Q(s,a) ← Q(s,a) + α[r + γ·max Q(s',a') – Q(s,a)]."},
+  {t:"Reinforcement Learning", q:"What is the exploration-exploitation tradeoff?", a:"Exploit known rewards vs. explore for potentially better ones. ε-greedy: explore with probability ε."},
+  {t:"Reinforcement Learning", q:"Model-based vs. model-free RL?", a:"Model-based: builds a world model for planning. Model-free: learns directly from experience."},
+  {t:"Reinforcement Learning", q:"What is temporal-difference learning?", a:"Updates value estimates from the difference between predicted and received reward — no full episode needed."},
+  {t:"Reinforcement Learning", q:"What is deep RL?", a:"Using a deep neural network to approximate the Q-function or policy. e.g. DQN playing Atari games."},
+  {t:"Reinforcement Learning", q:"What is the discount factor γ?", a:"How much future rewards are worth. γ=0: only now matters. γ=1: all future equally valued."},
+
+  // EVOLUTIONARY ALGORITHMS
+  {t:"Evolutionary Algorithms", q:"What is a genetic algorithm?", a:"Optimisation inspired by evolution: population of solutions evolves via selection, crossover, mutation."},
+  {t:"Evolutionary Algorithms", q:"What is a chromosome in a GA?", a:"An encoded candidate solution — often a binary string, real-valued vector, or permutation."},
+  {t:"Evolutionary Algorithms", q:"What is fitness?", a:"A score measuring how good a candidate solution is. Higher fitness = more likely to reproduce."},
+  {t:"Evolutionary Algorithms", q:"What is selection?", a:"Choosing which individuals reproduce. Fitter individuals get chosen more often."},
+  {t:"Evolutionary Algorithms", q:"What is crossover?", a:"Combining two parent chromosomes to produce offspring. Mixes good traits from both parents."},
+  {t:"Evolutionary Algorithms", q:"What is mutation?", a:"Randomly changing part of a chromosome. Maintains diversity, prevents premature convergence."},
+  {t:"Evolutionary Algorithms", q:"What is elitism?", a:"Always keeping the best individual(s) into the next generation. Ensures fitness never decreases."},
+  {t:"Evolutionary Algorithms", q:"What is premature convergence?", a:"Population becomes too similar too early — GA gets stuck at a local optimum."},
+  {t:"Evolutionary Algorithms", q:"Binary vs. permutation GA?", a:"Binary: bit strings for discrete/continuous problems. Permutation: orderings for TSP-style problems."},
+  {t:"Evolutionary Algorithms", q:"What is the schema theorem?", a:"Short, fit patterns (schemas) in chromosomes grow exponentially — explains why GAs work."},
+
+  // SWARM INTELLIGENCE
+  {t:"Swarm Intelligence", q:"What is swarm intelligence?", a:"Intelligent collective behaviour emerging from simple individual agents following local rules."},
+  {t:"Swarm Intelligence", q:"Name 3 swarm algorithms.", a:"PSO (particle swarm), ACO (ant colony), ABC (artificial bee colony)."},
+  {t:"Swarm Intelligence", q:"What is PSO?", a:"Particles move through search space, attracted to their own best position and the global best."},
+  {t:"Swarm Intelligence", q:"What are the 3 PSO velocity terms?", a:"Inertia (keep moving), cognitive (attraction to personal best), social (attraction to global best)."},
+  {t:"Swarm Intelligence", q:"What is the inertia weight w in PSO?", a:"Controls speed. High w = more exploration. Low w = more exploitation."},
+  {t:"Swarm Intelligence", q:"What is ACO?", a:"Ants deposit pheromone on paths. Shorter paths get more pheromone → reinforced over time."},
+  {t:"Swarm Intelligence", q:"Why does pheromone evaporate in ACO?", a:"To prevent all ants following a suboptimal path indefinitely. Evaporation enables forgetting."},
+  {t:"Swarm Intelligence", q:"What problem is ACO naturally suited for?", a:"Combinatorial routing problems like TSP — it exploits the graph structure of the problem."},
+  {t:"Swarm Intelligence", q:"What is a stopping condition in swarm algorithms?", a:"Max iterations reached, or no improvement over N consecutive iterations."},
+  {t:"Swarm Intelligence", q:"Swarm vs. genetic algorithms — key difference?", a:"Swarms: agents cooperate and share information. GAs: population evolves through reproduction."},
+
+  // HYBRID & ETHICS
+  {t:"Hybrid & Ethics", q:"What is a hybrid intelligent system?", a:"A system combining two or more AI methods — e.g. neuro-fuzzy (ANN + fuzzy logic)."},
+  {t:"Hybrid & Ethics", q:"What is a neuro-fuzzy system?", a:"Uses a neural network to automatically learn or tune fuzzy membership functions from data."},
+  {t:"Hybrid & Ethics", q:"Why combine methods?", a:"To get the strengths of both: e.g. fuzzy logic's interpretability + ANN's learning ability."},
+  {t:"Hybrid & Ethics", q:"Name 3 ethical issues in AI.", a:"Bias/fairness, lack of transparency, accountability for decisions."},
+  {t:"Hybrid & Ethics", q:"What is the AI alignment problem?", a:"Ensuring AI systems pursue goals that are actually beneficial to humans, not unintended objectives."},
+  {t:"Hybrid & Ethics", q:"When would you use fuzzy logic over ML?", a:"When you have expert rules but little data, and you need explainable, interpretable decisions."},
+  {t:"Hybrid & Ethics", q:"When would you use RL over supervised learning?", a:"When there are no labelled examples, but you can define a reward signal and let the agent learn by trial."},
+];
+
+const TOPICS = [...new Set(ALL.map(c => c.t))];
+let active = new Set(TOPICS);
+let deck = [], idx = 0, flipped = false;
+let got = 0, nope = 0, seen = new Set();
+
+function buildDeck() {
+  deck = ALL.filter(c => active.has(c.t));
+  idx = 0; flipped = false; seen.clear(); got = 0; nope = 0;
+  render();
+}
+function shuffle() {
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  idx = 0; flipped = false; seen.clear(); got = 0; nope = 0;
+  render();
+}
+function render() {
+  if (!deck.length) return;
+  const c = deck[idx];
+  document.getElementById('cardQ').textContent = c.q;
+  document.getElementById('cardA').textContent = c.a;
+  document.getElementById('cardTag').textContent = c.t;
+  document.getElementById('cardTagB').textContent = c.t;
+  document.getElementById('cardInner').classList.remove('flipped');
+  flipped = false;
+  document.getElementById('scoreRow').style.display = 'none';
+  document.getElementById('cardNum').textContent = (idx + 1) + ' / ' + deck.length;
+  document.getElementById('progFill').style.width = Math.round(((idx + 1) / deck.length) * 100) + '%';
+  document.getElementById('prevBtn').disabled = idx === 0;
+  document.getElementById('nextBtn').disabled = idx === deck.length - 1;
+  document.getElementById('sTotal').textContent = deck.length;
+  updateStats();
+}
+function flip() {
+  flipped = !flipped;
+  document.getElementById('cardInner').classList.toggle('flipped', flipped);
+  if (flipped) { seen.add(idx); document.getElementById('scoreRow').style.display = 'flex'; }
+}
+function go(dir) {
+  idx = Math.max(0, Math.min(deck.length - 1, idx + dir));
+  render();
+}
+function mark(yes) {
+  if (yes) got++; else nope++;
+  updateStats();
+  if (idx < deck.length - 1) setTimeout(() => go(1), 140);
+}
+function updateStats() {
+  document.getElementById('sSeen').textContent = seen.size;
+  document.getElementById('sGot').textContent = got;
+  document.getElementById('sRev').textContent = nope;
+}
+
+// Build topic buttons
+const bar = document.getElementById('topicBar');
+TOPICS.forEach(t => {
+  const btn = document.createElement('button');
+  btn.className = 'topic-btn active';
+  btn.textContent = t;
+  btn.onclick = () => {
+    if (active.has(t)) {
+      if (active.size > 1) { active.delete(t); btn.classList.remove('active'); }
+    } else {
+      active.add(t); btn.classList.add('active');
+    }
+    buildDeck();
+  };
+  bar.appendChild(btn);
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') go(-1);
+  else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); }
+  else if (e.key === 'g' || e.key === 'G') { if (flipped) mark(true); }
+  else if (e.key === 'n' || e.key === 'N') { if (flipped) mark(false); }
+});
+
+buildDeck();
+</script>
+</body>
+</html>
