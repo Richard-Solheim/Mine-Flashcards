@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ML Oral Exam Flashcards</title>
+<style>
+	:root {
+		--bg: #f6f5f1;
+		--surface: #ffffff;
+		--ink: #1f2430;
+		--muted: #606775;
+		--line: #dcdad2;
+		--accent: #2f5fd0;
+		--accent-soft: #e4ebfb;
+		--good: #1f7a4d;
+		--good-soft: #dff1e7;
+		--warn: #b4561a;
+		--warn-soft: #fbe9dc;
+	}
+	@media (prefers-color-scheme: dark) {
+		:root {
+			--bg: #14161c;
+			--surface: #1d2028;
+			--ink: #e8e9ee;
+			--muted: #9aa0ae;
+			--line: #323644;
+			--accent: #7ea2ff;
+			--accent-soft: #232c47;
+			--good: #5fcf94;
+			--good-soft: #1b3326;
+			--warn: #f0a070;
+			--warn-soft: #3a2619;
+		}
+	}
+	* { box-sizing: border-box; }
+	body {
+		margin: 0;
+		background: var(--bg);
+		color: var(--ink);
+		font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+		line-height: 1.5;
+	}
+	.wrap { max-width: 900px; margin: 0 auto; padding: 20px 16px 60px; }
+	h1 { font-size: 1.4rem; margin: 0 0 4px; }
+	.sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 16px; }
+	.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+	.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+	.chip {
+		border: 1px solid var(--line);
+		background: var(--surface);
+		color: var(--ink);
+		border-radius: 999px;
+		padding: 5px 12px;
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+	.chip .n { color: var(--muted); margin-left: 4px; font-size: 0.78rem; }
+	.chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+	.chip.on .n { color: #dfe7ff; }
+	button, input, select {
+		font: inherit;
+		color: var(--ink);
+	}
+	.btn {
+		border: 1px solid var(--line);
+		background: var(--surface);
+		border-radius: 8px;
+		padding: 7px 12px;
+		cursor: pointer;
+		font-size: 0.88rem;
+	}
+	.btn:hover { border-color: var(--accent); }
+	.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+	.btn.good { background: var(--good-soft); border-color: var(--good); color: var(--good); }
+	.btn.warn { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+	.btn.sel { background: var(--accent-soft); border-color: var(--accent); }
+	.spacer { flex: 1; }
+	input[type=search] {
+		border: 1px solid var(--line);
+		background: var(--surface);
+		border-radius: 8px;
+		padding: 7px 10px;
+		min-width: 160px;
+	}
+	.stats { color: var(--muted); font-size: 0.85rem; }
+	.progress { height: 6px; background: var(--line); border-radius: 4px; overflow: hidden; margin: 6px 0 16px; }
+	.progress > div { height: 100%; background: var(--good); width: 0; transition: width 0.25s; }
+
+	.scene { perspective: 1200px; }
+	.card {
+		position: relative;
+		min-height: 300px;
+		cursor: pointer;
+		transform-style: preserve-3d;
+		transition: transform 0.45s;
+	}
+	.card.flip { transform: rotateY(180deg); }
+	.face {
+		position: absolute;
+		inset: 0;
+		backface-visibility: hidden;
+		background: var(--surface);
+		border: 1px solid var(--line);
+		border-radius: 14px;
+		padding: 22px 24px;
+		display: flex;
+		flex-direction: column;
+		overflow: auto;
+	}
+	.face.back { transform: rotateY(180deg); border-color: var(--accent); }
+	.tag {
+		align-self: flex-start;
+		font-size: 0.75rem;
+		background: var(--accent-soft);
+		color: var(--accent);
+		border-radius: 999px;
+		padding: 2px 10px;
+		margin-bottom: 14px;
+	}
+	.q { font-size: 1.25rem; font-weight: 600; margin: auto 0; }
+	.a { font-size: 1.02rem; margin: auto 0; }
+	.a b { color: var(--accent); }
+	.readme {
+		background: var(--surface);
+		border: 1px solid var(--line);
+		border-radius: 12px;
+		padding: 10px 16px;
+		margin-bottom: 16px;
+		font-size: 0.9rem;
+	}
+	.readme summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
+	.readme p { margin: 10px 0; }
+	.readme table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+	.readme th, .readme td { text-align: left; vertical-align: top; padding: 7px 8px; border-top: 1px solid var(--line); }
+	.readme th { color: var(--muted); font-size: 0.78rem; font-weight: 600; border-top: none; }
+	.readme .tag { margin: 0; white-space: nowrap; }
+	.readme .note { color: var(--muted); font-size: 0.82rem; }
+	@media (max-width: 560px) {
+		.readme td:nth-child(3), .readme th:nth-child(3) { display: none; }
+	}
+	.tag[data-p="1"] { background: var(--warn-soft); color: var(--warn); }
+	.tag[data-p="2"] { background: var(--accent-soft); color: var(--accent); }
+	.tag[data-p="3"], .tag[data-p="4"] { background: var(--line); color: var(--muted); }
+	.chip.pc { border-style: dashed; }
+	.chip.pc.on { border-style: solid; }
+	.hint { color: var(--muted); font-size: 0.78rem; margin-top: 12px; }
+	.nav { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
+	.pos { color: var(--muted); font-size: 0.9rem; min-width: 80px; text-align: center; }
+	.badge-known { color: var(--good); font-size: 0.8rem; margin-left: 6px; }
+
+	.list { display: none; }
+	.item {
+		background: var(--surface);
+		border: 1px solid var(--line);
+		border-radius: 12px;
+		padding: 14px 18px;
+		margin-bottom: 10px;
+	}
+	.item .tag { margin-bottom: 8px; }
+	.item .iq { font-weight: 600; margin-bottom: 6px; }
+	.item .ia { display: none; color: var(--ink); }
+	.item.open .ia { display: block; }
+	.item .ia b { color: var(--accent); }
+	.item button { margin-top: 8px; }
+	.empty { text-align: center; color: var(--muted); padding: 50px 10px; }
+	.kbd { font-size: 0.75rem; color: var(--muted); margin-top: 18px; }
+	kbd {
+		border: 1px solid var(--line);
+		border-radius: 4px;
+		padding: 0 5px;
+		background: var(--surface);
+	}
+	@media (max-width: 560px) {
+		.card { min-height: 360px; }
+		.q { font-size: 1.1rem; }
+	}
+</style>
+</head>
+<body>
+<div class="wrap">
+	<h1>ML Oral Exam Flashcards</h1>
+	<div class="sub">Whole course, filter by theme. Say the answer out loud before you flip the card.</div>
+
+	<details class="readme" open>
+		<summary>Readme: what to prioritise for the 15-minute oral exam</summary>
+		<p><b>The exam.</b> Individual, about 15 minutes, on 19 or 20 November. You get a few conceptual questions from the lectures, activities, assignments and practicals. The focus is <b>why a method is used and how to interpret results</b>. You do not need to memorise definitions, Python code or derivations, and follow-up questions are likely.</p>
+		<table>
+			<tr><th>Tier</th><th>What is in it</th><th>Why</th></tr>
+			<tr><td><span class="tag" data-p="1">Core</span></td><td>Split and leakage, Preprocessing, Metrics and thresholds, Pipeline and workflow</td><td>Covers about half of the 30 questions in the question bank, and this is where follow-ups go. Learn these first.</td></tr>
+			<tr><td><span class="tag" data-p="2">Important</span></td><td>Foundations, EDA and plots, Regression (RMSE, R-squared), Classification (probability and threshold), plus the basic Pandas cards</td><td>Each maps to several bank questions. Know them well but they are more straightforward.</td></tr>
+			<tr><td><span class="tag" data-p="3">Light touch</span></td><td>Interpretation, Course datasets, plus ROC, AUC and cross-validation</td><td>One bank question on interpretation. Dataset cards are for borrowing examples. ROC, AUC and cross-validation were taught but are not in the question bank.</td></tr>
+			<tr><td><span class="tag" data-p="4">Low</span></td><td>Training math, most Pandas syntax</td><td>The exam says no code or derivations. Only keep the idea of predict, measure loss, update.</td></tr>
+		</table>
+		<p><b>Suggested order.</b> Core first, then Important, skim Light touch, and leave Low for last. Filter with the priority chips, and combine them with the theme chips.</p>
+		<p><b>How to answer.</b> Out loud, in four parts: what it is, why we use it, a course example, and how to read the result or what can go wrong. Use the Teach list view to explain a topic to someone else.</p>
+		<p class="note">These priorities are my judgement from the exam information and the question bank, not an official list. Nothing is formally excluded. The instructor says SVM, neural networks, ensemble theory, dimensionality reduction and hyperparameter tuning are out of scope unless announced.</p>
+	</details>
+
+	<div class="chips" id="pchips"></div>
+	<div class="chips" id="chips"></div>
+
+	<div class="bar">
+		<button class="btn sel" id="mCards">Cards</button>
+		<button class="btn" id="mList">Teach list</button>
+		<span class="spacer"></span>
+		<select id="status" class="btn">
+			<option value="all">All cards</option>
+			<option value="review">Still to review</option>
+			<option value="known">Known</option>
+		</select>
+		<input type="search" id="search" placeholder="Search cards">
+		<button class="btn" id="shuffle">Shuffle</button>
+		<button class="btn" id="reset">Reset progress</button>
+	</div>
+
+	<div class="stats" id="stats"></div>
+	<div class="progress"><div id="bar"></div></div>
+
+	<div class="empty" id="emptyS" style="display:none">No cards match these filters.</div>
+	<div id="study">
+		<div class="scene">
+			<div class="card" id="card">
+				<div class="face front"><span class="tag" id="tagF"></span><div class="q" id="qF"></div><div class="hint">Click, Space or Enter to flip</div></div>
+				<div class="face back"><span class="tag" id="tagB"></span><div class="a" id="aB"></div></div>
+			</div>
+		</div>
+		<div class="nav">
+			<button class="btn" id="prev">Previous</button>
+			<span class="pos" id="pos"></span>
+			<button class="btn" id="next">Next</button>
+			<span class="spacer"></span>
+			<button class="btn warn" id="again">Review again</button>
+			<button class="btn good" id="got">Got it</button>
+		</div>
+		<div class="kbd"><kbd>Space</kbd> flip, <kbd>Left</kbd> <kbd>Right</kbd> move, <kbd>G</kbd> got it, <kbd>R</kbd> review again</div>
+	</div>
+
+	<div class="list" id="list"></div>
+</div>
+
+<script>
+var THEMES = [
+	["F", "Foundations"],
+	["P", "Pandas"],
+	["E", "EDA and plots"],
+	["S", "Split and leakage"],
+	["R", "Preprocessing"],
+	["W", "Pipeline and workflow"],
+	["G", "Regression"],
+	["C", "Classification"],
+	["M", "Metrics and thresholds"],
+	["T", "Training math"],
+	["I", "Interpretation"],
+	["D", "Course datasets"]
+];
+
+var CARDS = [
+// ---------- Foundations ----------
+["F", `How is machine learning different from traditional programming?`, `Traditional: <b>you write the rules</b> (input + rules gives output), e.g. VAT = price x 0.25.<br>ML: <b>you give examples</b> and the algorithm learns the pattern. Model parameters are fitted from data, we do not hand-write the final rule.`],
+["F", `When is ML useful instead of ordinary code?`, `When a useful relationship exists but <b>no complete rule is known</b> (spam, churn), or the pattern <b>changes over time</b> (fraud, behaviour). A learned pattern is not permanent, so monitor and retrain.`],
+["F", `Why do fixed rules become brittle for spam filtering?`, `Rules like "FREE MONEY means spam" keep growing as wording changes. ML learns combinations of patterns from many labelled examples and can be <b>retrained</b> when the data changes.`],
+["F", `Supervised vs unsupervised learning?`, `First ask: <b>do we have a target (answer column)?</b><br>Yes = supervised. No = unsupervised (clustering customers, anomaly detection). No target does not mean no data.`],
+["F", `Classification vs regression?`, `Both are supervised.<br><b>Classification</b>: target is a category (churn, spam, heart disease).<br><b>Regression</b>: target is a continuous number (house price, electricity demand).`],
+["F", `Name two unsupervised tasks.`, `<b>Clustering</b>: group customers with similar purchasing behaviour.<br><b>Anomaly detection</b>: find unusual network behaviour without labelled attacks.`],
+["F", `What are observations, features and target?`, `<b>Observation</b>: one row (a customer, a patient, a district).<br><b>Features (X)</b>: input columns.<br><b>Target (y)</b>: the answer to predict, e.g. churned (0 stayed, 1 left).`],
+["F", `Why is customer_id usually not a feature?`, `It identifies a record but does not describe a meaningful characteristic. It invites <b>memorisation</b> instead of learning a pattern. Same for Order and PID in Ames.`],
+["F", `Model vs learning (fitting) vs fitted model?`, `<b>Model</b>: the form of relationship, e.g. y = wx + b.<br><b>Fitting</b>: learning w and b from training data.<br><b>Fitted model</b>: the learned relationship, e.g. y = 2.3x + 5, then used on new cases.`],
+["F", `Training vs prediction?`, `Training <b>changes (fits)</b> the model using examples with known answers. Prediction <b>applies</b> the fitted model to new X to produce a predicted y.`],
+["F", `What is generalisation?`, `Performing well on <b>new, unseen data</b>, not just the data it learned from. It is the real goal of ML.`],
+["F", `Underfitting vs overfitting vs good generalisation?`, `<b>Underfit</b>: weak everywhere (train 60, test 58).<br><b>Overfit</b>: great on train, much worse on test (train 99, test 63).<br><b>Good</b>: strong and similar (train 90, test 87).<br>99% training is not automatically best.`],
+["F", `Why does data quality and representativeness matter?`, `A model only learns from the data it gets. Problems: <b>sampling bias</b>, wrong labels, missing values, measurement errors, irrelevant features, too little data. Garbage in, garbage out.`],
+["F", `What went wrong in the 1936 Literary Digest poll?`, `Millions contacted, about 2.4 million responded, yet it predicted the wrong winner. The sample <b>over-represented wealthier people</b> and non-response mattered. Lesson: representativeness matters, not just size.`],
+["F", `List the end-to-end ML workflow (Lecture 1).`, `1 Define problem, 2 Obtain data, 3 Choose X and y, 4 Prepare data, 5 Train, 6 Predict, 7 Evaluate.<br>Training is only one step, much of ML is understanding and preparing data.`],
+["F", `Which tools does the course use and what does each do?`, `<b>Pandas</b>: prepare the table. <b>NumPy</b>: numerical arrays. <b>scikit-learn</b>: models, fitting, prediction, evaluation. Plus statistics, probability, linear algebra and loss/optimisation behind the scenes.`],
+
+// ---------- Pandas ----------
+["P", `DataFrame vs Series?`, `A <b>DataFrame</b> is a labelled table (rows = observations, columns = variables). A <b>Series</b> is one column.<br>df["age"] gives a Series, df[["age"]] gives a one-column DataFrame.`],
+["P", `How do you inspect a new dataset?`, `<b>head()</b> look at rows, <b>shape</b> size, <b>info()</b> types and non-null counts (missingness), <b>describe()</b> numeric summary, <b>isna().sum()</b> missing per column, <b>value_counts()</b> category counts.`],
+["P", `What does info() reveal that head() does not?`, `Column <b>data types</b> and <b>non-null counts</b>, so you see missing values and columns stored as the wrong type (a date as text, an ID as a number).`],
+["P", `What does describe() give you?`, `For numeric columns: count, mean, std, min, quartiles (25%, 50% = median, 75%) and max. Good for typical values, spread and suspicious extremes.`],
+["P", `loc vs iloc?`, `<b>loc</b> selects by labels/names (and a condition), end label included.<br><b>iloc</b> selects by integer position, stop position excluded.`],
+["P", `How do you filter rows with several conditions?`, `Boolean masks combined with <b>&amp;</b> (and), <b>|</b> (or), <b>~</b> (not), each condition in parentheses. Also isin() for a list and between() for a range.`],
+["P", `What does groupby() do?`, `<b>Group</b> rows by a category, <b>take</b> a column, <b>calculate</b> a summary per group, e.g. df.groupby("plan")["spend"].mean(). agg() requests several summaries.`],
+["P", `Why does mean() of a 0/1 column give a proportion?`, `Each 1 counts one case, so the mean equals the <b>proportion coded 1</b>. groupby("city")["churned"].mean() gives churn rate per city.`],
+["P", `Counts vs proportions: Basic 200 of 1000 churn, Premium 40 of 100. Which is worse?`, `Basic has more churners (200 vs 40) but <b>Premium has the higher rate</b> (40% vs 20%). Use <b>normalize="index"</b> or a group mean to compare groups of different size.`],
+["P", `fillna() vs dropna()?`, `<b>fillna</b> replaces missing values with a chosen value (e.g. median). <b>dropna</b> removes rows with missing values. The data decision comes before the command.`],
+["P", `rename vs map vs replace?`, `<b>rename</b> = change a label (column name).<br><b>map</b> = translate known values (0/1 to No/Yes).<br><b>replace</b> = correct selected values (Prem to Premium).`],
+["P", `When do you use cut() and astype(int) on a condition?`, `<b>cut()</b> makes numeric bands (age into under 30, 30-54, 55+). <code>(df["support_calls"] &gt;= 3).astype(int)</code> turns a True/False test into a 0/1 feature.`],
+["P", `Cleaning strings and dates?`, `<b>.str.strip().str.title()</b> makes " oslo " and "OSLO" the same category. <b>pd.to_datetime()</b> parses text dates so you can extract month, sort and compute differences.`],
+["P", `merge() vs concat()?`, `<b>merge</b> = match related rows by a key (different columns, same entities). <b>concat</b> = stack rows of the same structure (January table on February table).`],
+["P", `What do inner, left, right and outer joins keep?`, `Ask who must survive when keys do not match.<br>Inner: matched only. Left: all left rows (unmatched become NaN). Right: all right. Outer: everything.`],
+["P", `pivot vs pivot_table vs crosstab?`, `What should each cell contain?<br><b>pivot</b>: an existing value (MOVE).<br><b>pivot_table</b>: a calculated summary (CALCULATE).<br><b>crosstab</b>: a count of rows per combination (COUNT).`],
+["P", `What does melt() do?`, `Turns column headings into row values (wide to long), e.g. Jan, Feb, Mar columns become a month column and a spend column.`],
+["P", `How do you create X and y in Pandas?`, `<code>y = df["churned"]</code><br><code>X = df.drop(columns=["churned"])</code><br>An identifier stored as a number is still not a useful numeric feature.`],
+["P", `Pandas habit taught in Lecture B?`, `Say the operation in English first: <b>question, columns, operation, command, interpretation.</b> Commands are tools for specific data problems.`],
+
+// ---------- EDA ----------
+["E", `What is EDA and why before modelling?`, `Exploring the data to understand it and find patterns: class balance, variable meaning, missing or unusual values, which features differ between classes. Findings drive preprocessing and split decisions. It describes <b>association, not cause</b>.`],
+["E", `Bar chart: when?`, `Compare counts in <b>categories</b>, e.g. how many customers stayed or churned. For ML ask whether the target is <b>imbalanced</b>.`],
+["E", `Histogram: when and how to read it?`, `Shape of <b>one numeric variable</b>. Bars are ranges, height is count. Read centre, spread, shape, tails and gaps.`],
+["E", `Box plot: how to read it?`, `Box = middle 50% (Q1 to Q3), line = median. Whiskers reach the furthest actual value inside Q1 - 1.5 IQR and Q3 + 1.5 IQR. Points beyond are <b>potential outliers</b>, a flag to investigate, not automatically errors.`],
+["E", `Histogram or box plot?`, `The question decides. Histogram: <b>show me the shape</b>. Box plot: <b>summarise centre and spread and flag unusual values</b>. Both can describe the same variable.`],
+["E", `Box plot by group: how to compare?`, `Compare medians, boxes (middle 50%), spread and overlap, then look for outliers. A shift can mean predictive information, not causation.`],
+["E", `Scatter plot: when and how to read it?`, `Two <b>numeric</b> variables, each row a dot. Read direction, strength, form (linear or curved), clusters and unusual points. alpha makes dense regions visible.`],
+["E", `Line chart: when?`, `When <b>order matters</b>, typically time. Count per period then connect in order, read trend first, then peaks and dips. No causal claims from the line alone.`],
+["E", `Correlation heatmap: when and how?`, `Many numeric variables at once. Each cell is Pearson r for a pair, scale fixed from -1 to +1, diagonal is 1. Read the number and sign first, colour is an aid.`],
+["E", `Which plot for which question? (summary)`, `How many per group = bar. One measurement = histogram. Typical or unusual = box. Number across groups = box by group. Number vs number = scatter. Over time = line. Many numbers = heatmap.`],
+["E", `Mean vs median vs standard deviation?`, `<b>Mean</b>: average level. <b>Median</b>: middle value, less affected by extremes. <b>Std</b>: spread around the mean. Mean far above median hints at a right tail.`],
+["E", `What is Pearson r?`, `Direction and strength of a <b>linear</b> relationship, from -1 to +1. Positive: rise together. Negative: one rises, other falls. Near 0: little linear relationship (could still be curved).`],
+["E", `Correlation vs causation?`, `Correlation (or any EDA pattern) is an <b>association</b> in the observed data. It does not show that one variable causes the other. Other factors may explain it.`],
+["E", `How do you compare churned and stayed customers in EDA?`, `Numeric feature: box plot by group or overlaid histograms. Categorical feature: <b>crosstab with row proportions</b>. Conclude it carries predictive information but note the overlap.`],
+["E", `Crosstab: counts vs normalize="index"?`, `Counts answer how many. Row proportions answer <b>what share within each category</b>, so categories of different sizes are comparable.`],
+["E", `EDA vs preprocessing vs interpretation?`, `<b>EDA</b>: what is in the data and what patterns exist. <b>Preprocessing</b>: how X should be represented. <b>Interpretation</b>: what the fitted model relied on.`],
+["E", `Why look at the target distribution early?`, `To see <b>class imbalance</b> (churn, diabetes about 86/14) or odd values like the California target pile-up near $500k. It changes how you split and evaluate.`],
+
+// ---------- Split and leakage ----------
+["S", `Why split into TRAIN and TEST?`, `TRAIN is practice, TEST is the final exam for <b>unseen data</b>. If the same observations teach and judge the model, performance is too optimistic.`],
+["S", `What is TEST allowed to do?`, `Receive the TRAIN-learned preprocessing and model, produce predictions, then be compared with y_test. It <b>teaches nothing</b> and is not inspected repeatedly.`],
+["S", `What is data leakage?`, `Information the model should not have (from TEST or from the future) influences what it learns, so the test score looks better than real performance. Example: scaling the full dataset before the split.`],
+["S", `What does each preprocessing step learn from TRAIN?`, `<b>Imputer</b>: median. <b>Scaler</b>: mean and SD. <b>Encoder</b>: which categories exist. <b>Model</b>: coefficients. TEST uses these TRAIN values and learns nothing.`],
+["S", `Two types of leakage (IBM article)?`, `<b>Target leakage</b>: a feature holds information only known after the outcome (chargeback in fraud).<br><b>Train-test contamination</b>: test info reaches training, e.g. preprocessing before splitting.`],
+["S", `How can you spot leakage?`, `Unusually strong results, a big train-test gap, wildly varying cross-validation folds, feature importance for features that make no sense, a drop in real-world use.`],
+["S", `What is test-set contamination in model development?`, `Repeatedly changing the model after looking at TEST performance. The final score becomes optimistic. Compare models with <b>cross-validation on TRAIN</b> and use TEST once.`],
+["S", `ML Doctor: model.fit(X, y) then train_test_split. What is wrong?`, `The fit learned preprocessing and coefficients from <b>all rows</b>, so X_test is no longer unseen. Correct order: split, define pipeline, fit on TRAIN, predict on TEST, evaluate.`],
+["S", `What is stratification?`, `A split that keeps TRAIN and TEST at roughly the <b>same proportions</b> of an important group as the full data. For classification: stratify=y.`],
+["S", `Why stratify the heart split? (270 patients)`, `150 absent, 120 present. TEST of 54 should hold about 30 without and 24 with disease. A bad random split could give only 5 disease cases, so one miss moves recall by 20 points.`],
+["S", `Why is recall unstable with only 3 positives in TEST?`, `Recall can only be 0, 33, 67 or 100 percent, and one patient swings it by about 33 points. With 100 positives one patient changes it by 1 point.`],
+["S", `Does stratification improve the model or make classes 50/50?`, `No. It does not improve predictions, does not balance the classes and does not make TRAIN and TEST identical. It <b>protects the split from accidental distortion</b>.`],
+["S", `Stratifying in regression (California)?`, `The target is continuous, so make temporary groups. California binned median_income (bins 1.5, 3, 4.5, 6) into 5 groups, stratified on them, then dropped the helper and kept median_income.`],
+["S", `Must regression always stratify on the most correlated feature?`, `No. The choice needs a reason: protect target ranges or an important predictor's ranges. A plain random split is often fine. Stratification changes who goes where, not what the model predicts.`],
+["S", `What do the income bins look like and must they be equal in size?`, `Under 1.5: 4.0%, 1.5-3: 31.9%, 3-4.5: 35.1%, 4.5-6: 17.6%, over 6: 11.4%. Not equal, stratification preserves the real proportions. Broad, well-populated bins are a design choice.`],
+["S", `What do test_size=0.20 and random_state=42 mean?`, `20% of rows go to TEST. random_state makes the same random split reproducible.`],
+["S", `How does cross-validation work?`, `Split TRAIN into 5 groups, train on 4, check on the 5th, rotate so every group gets a turn. Five scores show consistency (heart AUC mean about 0.892). TEST stays separate for one final check.`],
+["S", `A genuinely new population has different prevalence. Force it to match TRAIN?`, `No. Stratification only protects a random split inside one dataset. It does not mean every future population must look like TRAIN.`],
+
+// ---------- Preprocessing ----------
+["R", `Why understand what a missing value means before replacing it?`, `Code does not determine meaning. NaN might mean <b>absent</b>, <b>not recorded</b>, or conditional on another variable. A blind fill invents information.`],
+["R", `Ames: NaN in Alley, Pool QC, Fence, Fireplace Qu, Misc Feature?`, `Documentation says the feature is <b>absent</b>, so fill with "None". It is a fixed rule from variable meaning, applied the same to TRAIN and TEST.`],
+["R", `None vs Unknown?`, `<b>None</b>: absence is established. <b>Unknown</b>: the category was not recorded and absence cannot be shown (e.g. Electrical). Unknown has no genuine place on an ordinal scale.`],
+["R", `Numerical NaN in Ames (Lot Frontage, Total Bsmt SF)?`, `The number was not recorded. Keep it numerical and impute with a value <b>learned from TRAIN</b> (median). Never insert "None" or guess 0.`],
+["R", `Conditional NaN: Mas Vnr Type and basement variables?`, `Use <b>original same-feature evidence</b>. Type NaN and Area 0 gives None, otherwise Unknown. Basement categories: Total Bsmt SF = 0 proves no basement.`],
+["R", `Why is BsmtFin SF 1 = 0 not proof of no basement?`, `It measures only one finished section. A basement can exist, fully unfinished. Total Bsmt SF measures the whole basement.`],
+["R", `Never turn an evidence NaN into 0. Why?`, `A NaN is not evidence. Filling it with 0 and then using that 0 to claim absence manufactures evidence that was never observed.`],
+["R", `Fixed semantic rule vs learned preprocessing?`, `A rule from variable meaning (Total Bsmt SF = 0 means no basement) is defined once and applied to both sets. Anything learned from data (median, mean, SD, categories, coefficients) comes from <b>TRAIN only</b>.`],
+["R", `Why median imputation (California total_bedrooms)?`, `207 values were missing. The median is simple and resistant to very large values. It is learned from TRAIN and reused on TEST.`],
+["R", `The four variable types and treatment?`, `<b>Numerical</b>: keep, scale if needed.<br><b>Nominal</b>: one-hot.<br><b>Ordinal</b>: ordered encoding.<br><b>Binary</b>: 0/1.<br>Identifiers are removed.`],
+["R", `Quick test: nominal or ordinal?`, `<b>Hide the target.</b> If the category order still makes real-world sense (Poor to Excellent) it is ordinal. If the order only appears after seeing the target (ocean_proximity prices) it is nominal.`],
+["R", `Same-looking numbers, different meaning?`, `cholesterol 240 = amount (numerical). major_vessels 2 = count (numerical). chest_pain 2 = category code (nominal). slope 2 = flat (ordinal). MS SubClass 20, 30, 60 = nominal codes.`],
+["R", `Heart dataset: which route for each feature?`, `Scale: age, BP, cholesterol, max HR, oldpeak, major_vessels. One-hot: chest_pain, resting_ecg, thal. Ordinal: slope. Binary 0/1 passthrough: sex, fasting blood sugar, exercise angina.`],
+["R", `Ordinal feature that contains Unknown?`, `Encode the real scale (None 0, Po 1, Fa 2, TA 3, Gd 4, Ex 5) and add a <b>separate Unknown indicator</b>. Do not invent a fake rank like -1.`],
+["R", `What is one-hot encoding and why not 1, 2, 3, 4?`, `One 0/1 column per category (1 = belongs). Plain 1 to 4 would invent <b>order and distance</b> (4-1 looks three times 2-1) between types that have none.`],
+["R", `New category appears in TEST. What happens?`, `The encoder is learned from TRAIN. Do not refit on TEST. <b>handle_unknown="ignore"</b> lets the pipeline continue safely.`],
+["R", `What is feature scaling and what does StandardScaler do?`, `Puts numeric features on comparable scales. StandardScaler: (x - TRAIN mean) / TRAIN SD. 0 is average, +1 is one SD above, -1 one SD below.`],
+["R", `Which models need scaling?`, `Often: <b>distance-based</b> (KNN, K-means, SVM), <b>gradient-based</b> (neural networks), <b>penalised</b> (Ridge, Lasso).<br>Usually not: ordinary linear regression, decision trees, random forests.`],
+["R", `Standard vs Robust vs MinMax scaler?`, `Standard: mean and SD, common start. Robust: median and IQR, for strong extremes. MinMax: TRAIN min and max to 0-1, for bounded input but extremes can compress the rest.`],
+["R", `Does scaling add information?`, `No. It changes numeric representation only. Different ranges are a reason to investigate, not an automatic command to scale.`],
+["R", `What is feature engineering?`, `Creating or transforming features so they carry useful information: age bands with cut(), a high_support flag, an Unknown indicator, house age from years.`],
+["R", `When do you keep or remove a feature?`, `Keep if evidence or meaning suggests signal. <b>Weak alone is not useless</b> (fasting blood sugar was kept). Remove identifiers, features unavailable at prediction time, or with a clear reason. Correlation alone is not a reason.`],
+["R", `Which Ames columns were removed and why?`, `Order and PID are identifiers. They identify the property, they do not describe a house characteristic for prediction.`],
+
+// ---------- Pipeline and workflow ----------
+["W", `What is a Pipeline?`, `Keeps preprocessing and the model <b>in the correct order</b> and reuses fitted steps consistently. E.g. imputer then scaler (scaler needs complete numbers), then the regressor.`],
+["W", `What is a ColumnTransformer?`, `Sends each column to the right route: numerical to imputer + scaler, categorical to one-hot. Pipeline = order of steps, ColumnTransformer = which columns take which route.`],
+["W", `DEFINE, LEARN, APPLY?`, `<b>Define</b>: build the recipe, nothing learned. <b>Learn</b>: during fit on TRAIN. <b>Apply</b>: during predict on TEST using the TRAIN-learned values.`],
+["W", `What happens during model.fit(X_train, y_train)?`, `Imputer learns medians, scaler learns mean and SD, encoder learns categories, X_train is prepared, then the model learns coefficients and intercept.`],
+["W", `What happens during model.predict(X_test)?`, `The TRAIN-learned preprocessing is applied to X_test, then the learned model parameters. Output is y_pred. <b>Nothing is re-learned</b> and y_test is not used.`],
+["W", `Why is y_test used only in EVALUATE?`, `It is the answer key. Using it while fitting or predicting would leak the answers. Only after predictions exist do we compare y_pred with y_test.`],
+["W", `Why can the scaler not compute mean and SD from X_test?`, `That would let TEST influence preparation and make it a different transformation from TRAIN. TEST must pass through an already learned system.`],
+["W", `What do X_train, y_train, X_test, y_test contain?`, `X_train: features of TRAIN rows. y_train: their correct targets. X_test: unseen features. y_test: the answer key used only for evaluation.`],
+["W", `Full classification workflow (heart lecture)?`, `Problem, Understand, EDA explore, EDA relate X to y, Split, Prepare, Fit, Predict (probability then threshold), Evaluate, Compare, Interpret.`],
+["W", `Locate the commands in the workflow.`, `info = understand. train_test_split = split. SimpleImputer, Scaler, Encoder = prepare (define). fit = learn from TRAIN. predict = apply. r2_score, confusion_matrix = evaluate.`],
+["W", `Question, evidence, decision?`, `The course habit: state the question, look at evidence (plot, table, number), then make a justified decision (keep feature, stratify, impute with median).`],
+
+// ---------- Regression ----------
+["G", `What is regression?`, `Supervised learning with a <b>continuous numeric target</b>. Example: predict a house price from size, quality, year built and neighbourhood.`],
+["G", `How does linear regression predict?`, `Combines features into a score: price = b + w x size (more features, more weights). w is the weight (slope), b the intercept. The prediction is an estimate, not a guaranteed price.`],
+["G", `What is a residual?`, `Actual minus predicted: e = y - y-hat. At x = 3, actual 6 and predicted 7 gives residual -1.`],
+["G", `Why square the residuals (MSE)?`, `Positive and negative errors would cancel in a plain average. Squaring stops that and gives <b>large mistakes more weight</b>. MSE is the loss minimised in training.`],
+["G", `What does RMSE tell you?`, `The square root of MSE. The <b>typical size of errors in the target's own units</b> (dollars). Lower is better, big errors weigh more.`],
+["G", `What does R-squared tell you?`, `Improvement over always predicting the mean. 1 = perfect, 0 = same as the mean baseline, negative = worse. It is <b>not percent accuracy</b>.`],
+["G", `California first model R-squared about 0.652. Meaning?`, `About 65% less squared error than predicting the average house value for every district.`],
+["G", `Worked example: errors -20, 30, -10 ($1,000s), baseline mean 300?`, `SS_model = 1,400, SS_baseline = 20,000. RMSE = sqrt(1400/3), about 21.6. R-squared = 1 - 1400/20000 = 0.93.`],
+["G", `Why use RMSE and R-squared together?`, `RMSE gives error size in dollars, R-squared gives improvement vs the mean baseline. Add an actual vs predicted plot to see <b>where</b> the model errs.`],
+["G", `Assignment 1 models and results (your notebook)?`, `LinearRegression, DecisionTree, RandomForest on the same features. Forest best on test: R-squared 0.876, RMSE about 27k vs about 33-35k for the others.`],
+["G", `Tree train R-squared 0.999 but test 0.792. What does that say?`, `<b>Overfitting</b>: it memorised training houses. The forest lost less (0.979 train to 0.876 test). Linear regression is similar on both, it is too rigid, not overfit.`],
+["G", `What does LinearRegression.fit() calculate?`, `Coefficients and intercept that minimise squared errors. In sklearn it typically uses a least-squares solver, not gradient descent. Toy example: y-hat = 1.5 + 1.6x, MSE 0.05.`],
+["G", `Does ordinary linear regression need scaling?`, `Usually not. Coefficients adjust to units, so fitted predictions are essentially unchanged. Scaling matters for penalised models like Ridge and Lasso.`],
+["G", `What is special about California housing rows and target?`, `One row is a <b>district</b>, not a house. Target median_house_value is capped near $500k, so the data cannot teach higher values. median_income is in units of about $10,000.`],
+
+// ---------- Classification ----------
+["C", `What is classification?`, `Supervised learning that predicts a <b>category</b> (heart disease absent or present, churn yes or no). Errors have different types, so we use a confusion matrix, precision and recall.`],
+["C", `What does logistic regression do?`, `Despite its name it classifies. Score z = b + w x, sigmoid converts it to a probability between 0 and 1, read as P(class 1 given X). A threshold turns it into a class.`],
+["C", `Why not a straight line for probability?`, `A line can go below 0 or above 1. The <b>sigmoid</b> 1/(1+e^-z) squeezes any score into the 0-1 range.`],
+["C", `Probability vs predicted class?`, `p is a probability. The class y-hat is a thresholded decision (1 if p at or above threshold). Cross-entropy loss uses p, not the class.`],
+["C", `How does the threshold assign a class?`, `If P(disease) is at least 0.50 predict 1, else 0. 0.82 becomes present. The 0.50 default is not a law of nature, changing it changes who is flagged.`],
+["C", `predict() vs predict_proba()?`, `<b>predict</b> returns class labels 0/1. <b>predict_proba(X)[:, 1]</b> returns the probability of the positive class.`],
+["C", `Regression vs classification: what changes in the workflow?`, `The trustworthy workflow stays the same. The <b>target</b> (number vs class) and the <b>evaluation</b> (RMSE and R-squared vs confusion matrix, precision, recall) change.`],
+["C", `What is the ROC curve?`, `Plots <b>recall</b> (y) against <b>false positive rate</b> (x) as the threshold changes. Each point is one threshold. Higher and further left is better. It does not pick the threshold.`],
+["C", `What is AUC?`, `Area under the ROC curve. One number for how well the model separates the classes across thresholds (Model A 0.93 vs B 0.74). It compares models, it does not choose a threshold.`],
+["C", `Why plot recall and specificity vs threshold?`, `To see the trade-off: a lower threshold finds more disease cases but creates more false alarms. The hospital examines consequences before choosing.`],
+
+// ---------- Metrics ----------
+["M", `What is a confusion matrix?`, `A table counting predictions against reality: TN, FP, FN, TP. Heart example on 54 test patients: TN 26, TP 22, FP 4, FN 2.`],
+["M", `Define TP, TN, FP, FN.`, `True/False = was the prediction correct. Positive/Negative = which class was predicted.<br><b>TP</b> sick, flagged. <b>TN</b> healthy, cleared. <b>FP</b> healthy, flagged (false alarm). <b>FN</b> sick, cleared (missed case).`],
+["M", `Accuracy: definition and heart value?`, `Share of all predictions that were correct. Heart: 48 of 54, about 89%. Says nothing about which mistakes were made.`],
+["M", `Precision: definition and heart value?`, `TP / (TP + FP). Of the cases flagged, how many were really positive. Heart: 22/26, about 85%.`],
+["M", `Recall (sensitivity): definition and heart value?`, `TP / (TP + FN). Of the real positives, how many did we find. Heart: 22/24, about 92%.`],
+["M", `Specificity and false positive rate?`, `Specificity = TN / (TN + FP), healthy correctly cleared (26/30, about 87%). FPR = FP / (FP + TN), healthy wrongly flagged (4/30, about 13%). They add to 100%.`],
+["M", `F1 score?`, `2PR / (P + R). One summary of precision and recall at <b>one threshold</b>. Heart: 0.88. It summarises both, it does not replace them.`],
+["M", `Why can accuracy mislead?`, `With imbalance. 95 healthy and 5 sick, saying "healthy" for all gives 95% accuracy and 0% recall. Diabetes: always predicting class 0 gives about 86%.`],
+["M", `Diabetes model: accuracy 0.862 but recall 0.158. Explain.`, `About 86% of rows are class 0, so always predicting "no diabetes" already scores about 86%. The model found only 1,120 of 7,069 real cases (recall 0.158). <b>Accuracy hid the minority-class failure.</b>`],
+["M", `What happens when you lower the threshold from 0.50 to 0.40?`, `More people flagged. FN falls (5,949 to 5,184), TP rises, recall rises (0.158 to 0.267), FP rises (1,037 to 2,130), precision falls (0.519 to 0.469), accuracy dips slightly (0.862 to 0.856).`],
+["M", `What did NOT change when only the threshold changed?`, `The model, its coefficients and the predicted probabilities. Only the <b>decision rule</b> changed, so different observations become positive.`],
+["M", `Which mistake matters more, FN or FP?`, `It depends on consequences. A missed disease case may cost more than a false alarm (Statlog assigns a higher cost to a false negative). Metric choice should follow the real-world decision.`],
+["M", `Which metric answers which question?`, `Confusion matrix: what errors? Recall: how many sick found? Precision: are alerts trustworthy? Specificity/FPR: false alarms? F1: one summary at a threshold. ROC/AUC: across thresholds.`],
+["M", `Diabetes: what is an FP and an FN?`, `<b>FP</b>: a person without diabetes flagged as diabetic. <b>FN</b>: a person with diabetes the model missed.`],
+["M", `Why is the diabetes test not balanced or resampled?`, `TEST must stay protected and reflect the real data. Stratify so class proportions match, but do not balance or resample TEST.`],
+
+// ---------- Training math ----------
+["T", `Training loop in one line?`, `<b>Predict, measure loss, calculate gradients, update weights</b>, repeat. Same loop for linear and logistic regression, only prediction and loss differ.`],
+["T", `What is a loss function?`, `A numeric score for how wrong predictions are, so the fitting process can tell better from worse. Linear regression: MSE. Logistic regression: binary cross-entropy.`],
+["T", `Binary cross-entropy intuition?`, `Penalty is -ln(p) when y = 1 and -ln(1 - p) when y = 0. Confident mistakes are punished hard: p = 0.1 for a pass costs 2.303, p = 0.9 costs 0.105.`],
+["T", `What is a gradient and which way do you move?`, `The slope of the loss curve. Positive: decrease w. Negative: increase w. Update: w_new = w_old - alpha x gradient.`],
+["T", `w vs dL/dw?`, `<b>w</b> is the slope of the prediction line. <b>dL/dw</b> is the slope of the loss-vs-w curve. One belongs to the model, the other guides optimisation.`],
+["T", `What is the learning rate alpha?`, `The step size of each update. Too small is slow, too large can overshoot. The gradient gives a local direction, not a guaranteed minimum.`],
+["T", `Why fix b in the loss-curve graph?`, `To draw a simple 2D curve and isolate the effect of w. Real training adjusts <b>both w and b</b>, needing two partial derivatives.`],
+["T", `Linear vs logistic regression side by side?`, `Score: both z = b + wx. Output: number vs probability. Loss: MSE vs cross-entropy. Class: n/a vs 1 if p at or above threshold. Optimiser: gradient descent (illustrated).`],
+["T", `What does fit() do for logistic regression?`, `Calculates z and p, compares p with y, adjusts weights and intercept to reduce loss, repeats until optimisation stops. sklearn uses LBFGS and L2 regularisation by default.`],
+["T", `Six-student example: w from 0.5 to 1.21?`, `Gradient about -1.774, alpha 0.4, so w goes 0.5 to about 1.21 and mean loss falls from about 0.966 to about 0.417.`],
+
+// ---------- Interpretation ----------
+["I", `Association vs causation in medical data?`, `EDA and correlations show associations in this sample. You cannot say a feature causes diabetes or heart disease.`],
+["I", `Is the classroom model a diagnostic system?`, `No. It is a teaching model. Errors have unequal consequences and results depend on data, split and threshold.`],
+["I", `What is permutation importance?`, `Shuffle one feature and score the same model again. A big drop means the fitted model relied on that feature.`],
+["I", `What does feature importance NOT tell you?`, `Not causation, and not an automatic reason to delete features. A feature weak alone can still help in combination.`],
+["I", `EDA clue vs model reliance?`, `EDA asks whether a feature relates to the target in the data. Interpretation asks what the <b>fitted model</b> used. They are different questions.`],
+["I", `Give two limitations of a classification analysis.`, `Examples: one dataset with no check on a new population, class imbalance, results depend on the chosen threshold, association only, model is simple, no clinical validation.`],
+["I", `What do you conclude from a strong EDA difference?`, `That the feature carries a <b>predictive clue</b> and is worth keeping as a candidate. Also state overlap and that it is not proof of cause.`],
+["I", `Why interpret carefully with medical data?`, `Errors are costly and unequal, accuracy can hide minority-class failure, associations are not causes, and thresholds embed value judgements.`],
+["I", `Assignment mantra?`, `<b>Meaning first, evidence, decision. Keep TEST protected. Association is not causation. Accuracy is not enough by itself.</b>`],
+
+// ---------- Course datasets ----------
+["D", `Heart disease (Statlog) basics?`, `270 patients, 13 features + target, no missing values. 150 absent (55.6%), 120 present (44.4%). Original target 1/2, teaching CSV 0/1.`],
+["D", `Heart: model results on 54 test patients?`, `TN 26, TP 22, FP 4, FN 2. Accuracy 89%, precision 85%, recall 92%, specificity 87%, F1 0.88, FPR 13%.`],
+["D", `Heart EDA: which features separated classes?`, `Stronger: chest pain (type 4 about 70.5% present), exercise angina (74% vs 30%), thal, slope, major vessels (25% at 0 to 84% at 3). Weak alone: fasting blood sugar (about 45% vs 43%).`],
+["D", `Heart numeric EDA?`, `Present group is older, has lower max heart rate and higher oldpeak. Cholesterol and BP overlap strongly. No single measurement cleanly separates the classes.`],
+["D", `Diabetes dataset (Assignment 2)?`, `253,680 rows, target Diabetes_binary: class 0 about 86% (218,334), class 1 about 14% (35,346). Imbalanced, so accuracy alone misleads. Logistic regression with stratified split.`],
+["D", `Diabetes threshold table?`, `0.50: acc 0.862, prec 0.519, rec 0.158, F1 0.243, FP 1037, FN 5949. 0.40: acc 0.856, prec 0.469, rec 0.267, F1 0.340, FP 2130, FN 5184. Lower threshold: more cases found, more false alarms.`],
+["D", `California housing: key facts?`, `20,640 districts, 9 features + target. 207 missing total_bedrooms (median imputation). Target capped near $500k. median_income r about 0.69. First linear model R-squared about 0.652.`],
+["D", `California ocean_proximity?`, `Categorical, nominal (no natural order). INLAND lowest median value, coastal higher, ISLAND highest but only 5 districts. One-hot encode it.`],
+["D", `Churn EDA dataset?`, `600 subscription customers. Support calls vs satisfaction r about -0.42. Median satisfaction 6.8 (stayed) vs 5.8 (churned). Spend quartiles 514, 635, 817 NOK.`],
+["D", `Ames Housing (Assignment 1)?`, `Predict SalePrice. Numerical, nominal, ordinal and binary features plus many NaN with different meanings. Compare LinearRegression, DecisionTree, RandomForest on the same features.`],
+["D", `GDP and OECD practical?`, `Two tables to combine in Pandas: gdp_per_capita (Entity, Code, Year, GDP) and oecd_bli (Country, Indicator, Value). Think merge on a shared country key, choose the join type by <b>who must be kept</b>, and check what does not match.`]
+];
+
+// ---------- priority tiers ----------
+var PNAMES = { 1: "Core", 2: "Important", 3: "Light touch", 4: "Low" };
+var THEME_PRIO = { S: 1, R: 1, M: 1, W: 1, F: 2, E: 2, G: 2, C: 2, I: 3, D: 3, T: 4, P: 4 };
+// Cards promoted or demoted from their theme default (matched on the start of the question)
+var OVERRIDE = {
+	2: [
+		"DataFrame vs Series?", "How do you inspect a new dataset?", "What does info() reveal",
+		"What does groupby() do?", "Why does mean() of a 0/1", "Counts vs proportions: Basic",
+		"Heart: model results on 54", "Diabetes threshold table?", "Diabetes dataset (Assignment 2)?"
+	],
+	3: [
+		"Training loop in one line?", "What is a loss function?",
+		"What is the ROC curve?", "What is AUC?", "Why plot recall and specificity vs threshold?",
+		"How does cross-validation work?", "Ordinal feature that contains Unknown?",
+		"Which Ames columns were removed", "A genuinely new population has different prevalence",
+		"How do you create X and y in Pandas?", "Pandas habit taught in Lecture B?"
+	]
+};
+var PRIO = CARDS.map(function (c) {
+	var p = THEME_PRIO[c[0]] || 3;
+	[2, 3].forEach(function (lvl) {
+		OVERRIDE[lvl].forEach(function (s) { if (c[1].indexOf(s) === 0) { p = lvl; } });
+	});
+	return p;
+});
+
+// ---------- app ----------
+var state = { themes: new Set(), pri: new Set(), status: "all", q: "", order: [], pos: 0, flipped: false, mode: "cards" };
+var known = new Set();
+var KEY = "mlFlashcardsKnown.v1";
+
+function loadKnown() {
+	try {
+		var raw = localStorage.getItem(KEY);
+		if (raw) { known = new Set(JSON.parse(raw)); }
+	} catch (e) { known = new Set(); }
+}
+function saveKnown() {
+	try { localStorage.setItem(KEY, JSON.stringify(Array.from(known))); } catch (e) {}
+}
+function themeName(k) {
+	for (var i = 0; i < THEMES.length; i++) { if (THEMES[i][0] === k) { return THEMES[i][1]; } }
+	return k;
+}
+function stripHtml(s) { return s.replace(/<[^>]+>/g, " ").toLowerCase(); }
+
+function matching() {
+	var out = [];
+	for (var i = 0; i < CARDS.length; i++) {
+		var c = CARDS[i];
+		if (!c[2]) { continue; }
+		if (state.themes.size && !state.themes.has(c[0])) { continue; }
+		if (state.pri.size && !state.pri.has(PRIO[i])) { continue; }
+		if (state.status === "known" && !known.has(i)) { continue; }
+		if (state.status === "review" && known.has(i)) { continue; }
+		if (state.q) {
+			var hay = (c[1] + " " + stripHtml(c[2])).toLowerCase();
+			if (hay.indexOf(state.q) === -1) { continue; }
+		}
+		out.push(i);
+	}
+	return out;
+}
+function rebuild(keepOrder) {
+	var ids = matching();
+	if (keepOrder && state.order.length) {
+		var set = new Set(ids);
+		var kept = state.order.filter(function (i) { return set.has(i); });
+		var keptSet = new Set(kept);
+		ids.forEach(function (i) { if (!keptSet.has(i)) { kept.push(i); } });
+		ids = kept;
+	}
+	state.order = ids;
+	if (state.pos >= ids.length) { state.pos = Math.max(0, ids.length - 1); }
+	render();
+}
+function shuffle() {
+	var a = state.order.slice();
+	for (var i = a.length - 1; i > 0; i--) {
+		var j = Math.floor(Math.random() * (i + 1));
+		var t = a[i]; a[i] = a[j]; a[j] = t;
+	}
+	state.order = a;
+	state.pos = 0;
+	state.flipped = false;
+	render();
+}
+function counts() {
+	var c = {};
+	CARDS.forEach(function (card) { if (card[2]) { c[card[0]] = (c[card[0]] || 0) + 1; } });
+	return c;
+}
+function renderChips() {
+	var el = document.getElementById("chips");
+	var c = counts();
+	var total = 0;
+	for (var k in c) { total += c[k]; }
+	var html = '<button class="chip' + (state.themes.size === 0 ? " on" : "") + '" data-t="*">All<span class="n">' + total + '</span></button>';
+	THEMES.forEach(function (t) {
+		html += '<button class="chip' + (state.themes.has(t[0]) ? " on" : "") + '" data-t="' + t[0] + '">' + t[1] + '<span class="n">' + (c[t[0]] || 0) + '</span></button>';
+	});
+	el.innerHTML = html;
+	var pc = {};
+	CARDS.forEach(function (card, i) {
+		if (!card[2]) { return; }
+		if (state.themes.size && !state.themes.has(card[0])) { return; }
+		pc[PRIO[i]] = (pc[PRIO[i]] || 0) + 1;
+	});
+	var ph = '<button class="chip pc' + (state.pri.size === 0 ? " on" : "") + '" data-p="*">Any priority</button>';
+	[1, 2, 3, 4].forEach(function (p) {
+		ph += '<button class="chip pc' + (state.pri.has(p) ? " on" : "") + '" data-p="' + p + '">' + PNAMES[p] + '<span class="n">' + (pc[p] || 0) + '</span></button>';
+	});
+	document.getElementById("pchips").innerHTML = ph;
+}
+function renderStats() {
+	var total = 0, kn = 0;
+	state.order.forEach(function (i) { total++; if (known.has(i)) { kn++; } });
+	document.getElementById("stats").textContent = total + " cards shown, " + kn + " marked known";
+	document.getElementById("bar").style.width = (total ? Math.round(kn / total * 100) : 0) + "%";
+}
+function renderCard() {
+	var card = document.getElementById("card");
+	var has = state.order.length > 0;
+	document.getElementById("study").style.display = (state.mode === "cards" && has) ? "block" : "none";
+	document.getElementById("emptyS").style.display = (state.mode === "cards" && !has) ? "block" : "none";
+	if (!has) { return; }
+	var id = state.order[state.pos];
+	var c = CARDS[id];
+	["tagF", "tagB"].forEach(function (t) {
+		var el = document.getElementById(t);
+		el.textContent = themeName(c[0]) + " | " + PNAMES[PRIO[id]];
+		el.setAttribute("data-p", PRIO[id]);
+	});
+	document.getElementById("qF").textContent = c[1];
+	document.getElementById("aB").innerHTML = c[2];
+	document.getElementById("pos").innerHTML = (state.pos + 1) + " / " + state.order.length + (known.has(id) ? '<span class="badge-known"> known</span>' : "");
+	card.classList.toggle("flip", state.flipped);
+}
+function renderList() {
+	var el = document.getElementById("list");
+	if (!state.order.length) { el.innerHTML = '<div class="empty">No cards match these filters.</div>'; return; }
+	var html = "";
+	state.order.forEach(function (id) {
+		var c = CARDS[id];
+		html += '<div class="item" data-id="' + id + '"><span class="tag" data-p="' + PRIO[id] + '">' + themeName(c[0]) + ' | ' + PNAMES[PRIO[id]] + '</span><div class="iq">' + c[1].replace(/</g, "&lt;") + '</div><div class="ia">' + c[2] + '</div><button class="btn">Show answer</button></div>';
+	});
+	el.innerHTML = html;
+}
+function render() {
+	renderChips();
+	renderStats();
+	document.getElementById("emptyS").style.display = "none";
+	document.getElementById("list").style.display = state.mode === "list" ? "block" : "none";
+	document.getElementById("mCards").classList.toggle("sel", state.mode === "cards");
+	document.getElementById("mList").classList.toggle("sel", state.mode === "list");
+	if (state.mode === "cards") { renderCard(); } else { renderList(); }
+}
+function flip() { if (state.order.length) { state.flipped = !state.flipped; document.getElementById("card").classList.toggle("flip", state.flipped); } }
+function go(d) {
+	if (!state.order.length) { return; }
+	state.pos = (state.pos + d + state.order.length) % state.order.length;
+	state.flipped = false;
+	renderCard();
+}
+function mark(isKnown) {
+	if (!state.order.length) { return; }
+	var id = state.order[state.pos];
+	if (isKnown) { known.add(id); } else { known["delete"](id); }
+	saveKnown();
+	renderStats();
+	if (state.status === "all") { go(1); } else { rebuild(true); state.flipped = false; renderCard(); }
+}
+
+document.getElementById("chips").addEventListener("click", function (e) {
+	var b = e.target.closest(".chip");
+	if (!b) { return; }
+	var t = b.getAttribute("data-t");
+	if (t === "*") { state.themes.clear(); }
+	else if (state.themes.has(t)) { state.themes["delete"](t); }
+	else { state.themes.add(t); }
+	state.pos = 0; state.flipped = false;
+	rebuild(false);
+});
+document.getElementById("pchips").addEventListener("click", function (e) {
+	var b = e.target.closest(".chip");
+	if (!b) { return; }
+	var p = b.getAttribute("data-p");
+	if (p === "*") { state.pri.clear(); }
+	else {
+		var n = parseInt(p, 10);
+		if (state.pri.has(n)) { state.pri["delete"](n); } else { state.pri.add(n); }
+	}
+	state.pos = 0; state.flipped = false;
+	rebuild(false);
+});
+document.getElementById("card").addEventListener("click", flip);
+document.getElementById("prev").addEventListener("click", function () { go(-1); });
+document.getElementById("next").addEventListener("click", function () { go(1); });
+document.getElementById("got").addEventListener("click", function () { mark(true); });
+document.getElementById("again").addEventListener("click", function () { mark(false); });
+document.getElementById("shuffle").addEventListener("click", shuffle);
+document.getElementById("reset").addEventListener("click", function () {
+	if (confirm("Clear all known marks?")) { known = new Set(); saveKnown(); rebuild(true); }
+});
+document.getElementById("status").addEventListener("change", function (e) { state.status = e.target.value; state.pos = 0; state.flipped = false; rebuild(false); });
+document.getElementById("search").addEventListener("input", function (e) { state.q = e.target.value.trim().toLowerCase(); state.pos = 0; state.flipped = false; rebuild(false); });
+document.getElementById("mCards").addEventListener("click", function () { state.mode = "cards"; render(); });
+document.getElementById("mList").addEventListener("click", function () { state.mode = "list"; render(); });
+document.getElementById("list").addEventListener("click", function (e) {
+	var b = e.target.closest("button");
+	var item = e.target.closest(".item");
+	if (!item) { return; }
+	item.classList.toggle("open");
+	var btn = item.querySelector("button");
+	btn.textContent = item.classList.contains("open") ? "Hide answer" : "Show answer";
+});
+document.addEventListener("keydown", function (e) {
+	if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || state.mode !== "cards") { return; }
+	if (e.key === " " || e.key === "Enter") { e.preventDefault(); flip(); }
+	else if (e.key === "ArrowRight") { go(1); }
+	else if (e.key === "ArrowLeft") { go(-1); }
+	else if (e.key === "g" || e.key === "G") { mark(true); }
+	else if (e.key === "r" || e.key === "R") { mark(false); }
+});
+
+loadKnown();
+rebuild(false);
+</script>
+</body>
+</html>
